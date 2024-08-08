@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        img {
+            max-width: 90%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        a {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+        form {
+            margin: 20px 0;
+        }
+        label, select, button {
+            margin: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #logo {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="logo">
+        <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Company Logo" width="150">
+    </div>
+    <h1>Cropped Image</h1>
+    <img src="{{ url_for('download_file', filename=filename) }}" alt="Cropped Image"><br><br>
+    <a href="{{ url_for('download_file', filename='cropped_' + filename) }}">Download Cropped Image</a>
+    <form method="get" onsubmit="setAction(this)">
+        <label for="num-copies">Number of Copies:</label>
+        <select name="num_copies" id="num-copies" required>
+            <option value="4">4 Images on A4</option>
+            <option value="8">8 Images on A4</option>
+        </select><br><br>
+
+        <input type="hidden" name="filename" value="{{ filename }}">
+        <button type="submit">Download Print Image</button>
+        <button type="button" onclick="printImage()">Print</button>
+    </form>
+    <form action="/delete_all_folders" method="post" style="margin-top: 20px;">
+        <button type="submit" class="delete-button">Delete All Results and Uploads</button>
+    </form>
+
+    <script>
+        function setAction(form) {
+            const numCopies = form.num_copies.value;
+            const filename = form.filename.value;
+
+            // Constructing the action URL dynamically
+            form.action = `/print/${filename}/${numCopies}`;
+        }
+
+        function printImage() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
