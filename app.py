@@ -1,9 +1,10 @@
 from PIL import Image
-from flask import Flask, request, render_template, send_from_directory, send_file, make_response
+from flask import Flask, request, render_template, send_from_directory, send_file, make_response, jsonify, redirect
 from mtcnn import MTCNN
 import cv2
 import numpy as np
 import os
+import json
 
 app = Flask(__name__)
 
@@ -16,6 +17,7 @@ RESULT_FOLDER = 'results'
 # Create directories if they don't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
+
 
 def get_pixels_from_inches(inches, dpi=300):
     return int(inches * dpi)
@@ -33,7 +35,7 @@ def upload_image():
         # Read the image using OpenCV
         img = cv2.imread(img_path)
 
-        # Detect faces
+        # Detect faces (assuming `detector` is defined elsewhere)
         detections = detector.detect_faces(img)
         if len(detections) == 0:
             return "No face detected", 400
@@ -58,13 +60,12 @@ def upload_image():
 
         # Get the selected crop size
         crop_size = request.form['crop_size']
+        sizes = load_sizes()  # Load sizes from JSON
 
-        if crop_size == '2x2':
-            final_width = get_pixels_from_inches(2)
-            final_height = get_pixels_from_inches(2)
-        elif crop_size == '0.8x0.8':
-            final_width = get_pixels_from_inches(0.8)
-            final_height = get_pixels_from_inches(0.8)
+        if crop_size in sizes:
+            size = sizes[crop_size]
+            final_width = get_pixels_from_inches(size['width'])
+            final_height = get_pixels_from_inches(size['height'])
         elif crop_size == 'custom':
             custom_width = float(request.form.get('custom_width', 2))
             custom_height = float(request.form.get('custom_height', 2))
@@ -83,10 +84,6 @@ def upload_image():
         return render_template('result.html', filename=f"resized_{image.filename}")
 
     return render_template('upload.html')
-
-
-from PIL import Image
-import os
 
 @app.route('/print/<filename>/<int:num_copies>')
 def print_image(filename, num_copies):
@@ -133,6 +130,7 @@ def print_image(filename, num_copies):
         response.headers.set('Content-Disposition', 'attachment', filename=f"printable_{filename}")
         return response
 
+
 @app.route('/api/crop', methods=['POST'])
 def api_crop_image():
     if 'image' not in request.files:
@@ -171,12 +169,18 @@ def api_crop_image():
     # Get the selected crop size
     crop_size = request.form.get('crop_size', '2x2')
 
-    if crop_size == '2x2':
-        final_width = get_pixels_from_inches(2)
-        final_height = get_pixels_from_inches(2)
-    elif crop_size == '0.8x0.8':
-        final_width = get_pixels_from_inches(0.8)
-        final_height = get_pixels_from_inches(0.8)
+    # Load sizes from JSON
+    sizes_path = './sizes.json'
+    if not os.path.exists(sizes_path):
+        return jsonify({"error": "Sizes file not found"}), 404
+
+    with open(sizes_path, 'r') as file:
+        sizes = json.load(file)
+
+    size_data = sizes.get(crop_size)
+    if size_data:
+        final_width = get_pixels_from_inches(size_data['width'])
+        final_height = get_pixels_from_inches(size_data['height'])
     elif crop_size == 'custom':
         custom_width = float(request.form.get('custom_width', 2))
         custom_height = float(request.form.get('custom_height', 2))
@@ -231,6 +235,70 @@ def api_crop_image():
     # Return the printable image as a response
     return send_file(final_image_path, mimetype='image/jpeg')
 
+@app.route('/settings')
+def settings():
+    return render_template('setting.html')
+
+# Load sizes from a JSON file
+def load_sizes():
+    try:
+        with open('sizes.json', 'r') as f:
+            content = f.read().strip()
+            if not content:
+                return {}  # Return an empty dictionary if file is empty
+            return json.loads(content)
+    except FileNotFoundError:
+        print("File not found.")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
+        return {}
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return {}
+
+
+
+# Save sizes to a JSON file
+def save_sizes(sizes):
+    with open('sizes.json', 'w') as f:
+        json.dump(sizes, f, indent=4)
+
+
+@app.route('/add_size', methods=['POST'])
+def add_size():
+    size_name = request.form['size_name']
+    width = float(request.form['width'])
+    height = float(request.form['height'])
+
+    sizes = load_sizes()
+    if isinstance(sizes, list):
+        sizes = {}  # Ensure sizes is a dictionary
+
+    sizes[size_name] = {'width': width, 'height': height}
+    save_sizes(sizes)
+
+    return redirect('/settings')
+
+@app.route('/api/sizes', methods=['GET'])
+def get_sizes():
+    sizes_path = './sizes.json'
+    if not os.path.exists(sizes_path):
+        return jsonify({"error": "Sizes file not found"}), 404
+
+    with open(sizes_path, 'r') as file:
+        sizes = json.load(file)
+
+    # Ensure sizes is a dictionary
+    if isinstance(sizes, list):
+        return jsonify({"error": "Invalid data format"}), 500
+
+    # Convert JSON to a format suitable for the frontend
+    formatted_sizes = [{"label": f"{v['width']}x{v['height']} inches", "value": k} for k, v in sizes.items()]
+
+    return jsonify(formatted_sizes)
+
+
 @app.route('/delete_all_folders', methods=['POST'])
 def delete_all_folders():
     # Delete all files in RESULT_FOLDER
@@ -252,12 +320,17 @@ def delete_all_folders():
             return f"An error occurred while deleting files in uploads: {str(e)}", 500
 
     return "All files in upload and result folders deleted successfully", 200
+
+
+
+
 @app.route('/download/<filename>')
 def download_file(filename):
     cropped_img_path = os.path.join(RESULT_FOLDER, filename)
     if not os.path.exists(cropped_img_path):
         return "File not found", 404
     return send_from_directory(RESULT_FOLDER, filename)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

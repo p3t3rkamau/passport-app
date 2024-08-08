@@ -14,33 +14,67 @@
             flex-direction: column;
             height: 100vh;
         }
+         body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
         .navbar {
-            background-color: #007bff;
-            color: white;
-            padding: 10px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
+            background-color: #333;
+            padding: 10px;
+            color: white;
+            position:fixed;
+            width:100%;
+
         }
         .navbar img {
-            height: 40px;
+            height: 50px; /* Adjust the height of the logo as needed */
+            margin-right: 20px;
+        }
+        .navbar div {
+            flex-grow: 1;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        .navbar a:hover {
+            text-decoration: underline;
+        }
+        .navbar form {
+            display: flex;
+            align-items: center;
+        }
+        .navbar form label {
+            margin-right: 10px;
+        }
+        .navbar form select {
+            margin-right: 10px;
+        }
+        .navbar form button {
+            padding: 5px 10px;
+            background-color: #555;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        .navbar form button:hover {
+            background-color: #777;
         }
         .sidebar {
             background-color: #343a40;
             color: white;
             width: 200px;
             position: fixed;
-            top: 60px; /* Adjust based on navbar height */
+            top: 100px; /* Adjust based on navbar height */
             bottom: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: flex-between;
+            padding-right:10px;
         }
         .sidebar a {
             color: white;
@@ -64,10 +98,13 @@
             max-width: 45%;
             margin: 10px;
         }
+        .image-preview img{
+            border: 1px solid #ddd
+        }
         img {
             max-width: 100%;
             height: auto;
-            border: 1px solid #ddd;
+
             border-radius: 4px;
         }
         a {
@@ -108,49 +145,51 @@
         .delete-button:hover {
             background-color: #c82333;
         }
+        .croppedImage{
+            max-width:100px
+            max-height:100px
+            object-fit:cover;
+        }
     </style>
 </head>
 <body>
-    <div class="navbar">
+     <div class="navbar">
         <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Company Logo">
         <div>
-            <a href="/" style="color: white; text-decoration: none; margin-right: 20px;">Home</a>
 
         </div>
-    </div>
-
-    <div class="sidebar">
-        <a href="/">Upload</a>
-        <a href="#">Settings</a>
-        <!-- Add more sidebar options here -->
-    </div>
-
-    <div class="content">
-        <div class="image-preview">
-            <h1>Cropped Image</h1>
-            <img src="{{ url_for('download_file', filename=filename) }}" alt="Cropped Image">
-        </div>
-
-        <div class="image-preview">
-            <h1>Printable Image Preview</h1>
-            <img src="{{ url_for('print_image', filename=filename, num_copies=4) }}" alt="Printable Image Preview">
-
-        </div>
-
         <form method="get" onsubmit="setAction(this)">
             <label for="num-copies">Number of Copies:</label>
             <select name="num_copies" id="num-copies" required>
                 <option value="4">4 Images on A4</option>
                 <option value="8">8 Images on A4</option>
-            </select><br><br>
-
+            </select>
             <input type="hidden" name="filename" value="{{ filename }}">
             <button type="submit">Download Print Image</button>
         </form>
+    </div>
 
-        <form action="/delete_all_folders" method="post" style="margin-top: 20px;">
-            <button type="submit" class="delete-button">Delete All Results and Uploads</button>
-        </form>
+    <div class="sidebar">
+        <a href="/">Upload</a>
+        <a href="/settings">Settings</a>
+
+    </div>
+
+    <div class="content">
+        <div class="image-preview">
+            <h4>Cropped Image</h4>
+            <img class="croppedImage" src="{{ url_for('download_file', filename=filename) }}" alt="Cropped Image">
+        </div>
+
+        <div class="image-preview">
+            <h4>Printable Image Preview</h4>
+            <img src="{{ url_for('print_image', filename=filename, num_copies=4) }}" alt="Printable Image Preview">
+
+        </div>
+
+
+
+
     </div>
 
     <script>
