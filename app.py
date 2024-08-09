@@ -1,10 +1,11 @@
-from PIL import Image
 from flask import Flask, request, render_template, send_from_directory, send_file, make_response, jsonify, redirect
 from mtcnn import MTCNN
 import cv2
 import numpy as np
 import os
+from PIL import Image
 import json
+
 
 app = Flask(__name__)
 
@@ -18,9 +19,23 @@ RESULT_FOLDER = 'results'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
 
-
 def get_pixels_from_inches(inches, dpi=300):
     return int(inches * dpi)
+
+def resize_and_crop(image, target_width, target_height):
+    ih, iw = image.shape[:2]
+    scale = max(target_width / iw, target_height / ih)
+    nw = int(iw * scale)
+    nh = int(ih * scale)
+    image_resized = cv2.resize(image, (nw, nh), interpolation=cv2.INTER_AREA)
+    x_center = nw // 2
+    y_center = nh // 2
+    crop_x1 = max(0, x_center - target_width // 2)
+    crop_y1 = max(0, y_center - target_height // 2)
+    crop_x2 = crop_x1 + target_width
+    crop_y2 = crop_y1 + target_height
+    cropped_image = image_resized[crop_y1:crop_y2, crop_x1:crop_x2]
+    return cropped_image
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_image():
@@ -35,7 +50,7 @@ def upload_image():
         # Read the image using OpenCV
         img = cv2.imread(img_path)
 
-        # Detect faces (assuming `detector` is defined elsewhere)
+        # Detect faces
         detections = detector.detect_faces(img)
         if len(detections) == 0:
             return "No face detected", 400
@@ -44,10 +59,11 @@ def upload_image():
         bounding_box = detections[0]['box']
         x, y, width, height = bounding_box
 
+        # Increase the top margin to avoid cutting off the head
         # Calculate the margin to include some chest area and space above the head
-        chest_extension = int(height * 0.5)
-        margin = int(0.2 * width)  # Margin around the face
-        top_margin = int(0.3 * height)  # Additional space above the head
+        chest_extension = int(height * 0.4)  # Increased chest area (was 0.5)
+        margin = int(0.4 * width)  # Increased left and right margin (was 0.2)
+        top_margin = int(0.8 * height)  # Increased space above the head (was 0.3)
 
         # Calculate crop coordinates
         crop_x1 = max(x - margin, 0)
@@ -60,7 +76,7 @@ def upload_image():
 
         # Get the selected crop size
         crop_size = request.form['crop_size']
-        sizes = load_sizes()  # Load sizes from JSON
+        sizes = load_sizes()
 
         if crop_size in sizes:
             size = sizes[crop_size]
@@ -74,8 +90,7 @@ def upload_image():
         else:
             return "Invalid crop size selected", 400
 
-        # Resize the cropped image to the desired final dimensions
-        resized_img = cv2.resize(cropped_img, (final_width, final_height))
+        resized_img = resize_and_crop(cropped_img, final_width, final_height)
 
         # Save the resized image
         resized_img_path = os.path.join(RESULT_FOLDER, f"resized_{image.filename}")
@@ -110,16 +125,20 @@ def print_image(filename, num_copies):
     row_height = 0
 
     for i in range(num_copies):
-        if x_offset + cropped_width + margin > a4_width:
+        # Add a 1px border to the image
+        bordered_img = Image.new('RGB', (cropped_width + 2, cropped_height + 2), (0, 0, 0))
+        bordered_img.paste(cropped_img, (1, 1))
+
+        if x_offset + bordered_img.width + margin > a4_width:
             x_offset = margin
             y_offset += row_height + margin
-            row_height = cropped_height
+            row_height = bordered_img.height
 
-        a4_canvas.paste(cropped_img, (x_offset, y_offset))
-        x_offset += cropped_width + margin
-        row_height = max(row_height, cropped_height)
+        a4_canvas.paste(bordered_img, (x_offset, y_offset))
+        x_offset += bordered_img.width + margin
+        row_height = max(row_height, bordered_img.height)
 
-        # Save the final image
+    # Save the final image
     final_image_path = os.path.join(RESULT_FOLDER, f"printable_{filename}")
     a4_canvas.save(final_image_path)
 
@@ -129,7 +148,6 @@ def print_image(filename, num_copies):
         response.headers.set('Content-Type', 'application/octet-stream')
         response.headers.set('Content-Disposition', 'attachment', filename=f"printable_{filename}")
         return response
-
 
 @app.route('/api/crop', methods=['POST'])
 def api_crop_image():
