@@ -7,7 +7,7 @@ __pycache__
 .env
 .venv
 env/
-venv/
+venv/Lib
 ENV/
 env.bak/
 venv.bak/
