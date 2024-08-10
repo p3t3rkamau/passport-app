@@ -9,7 +9,8 @@ if not exist .\pythonembed\Scripts\pip.exe (
 REM Check if virtual environment exists
 if not exist venv (
     echo Creating virtual environment...
-    .\pythonembed\python.exe -m venv venv
+    mkdir venv
+    xcopy /E /I /Y myenv venv
 )
 
 REM Activate the virtual environment
