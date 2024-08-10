@@ -2,6 +2,15 @@
 REM Set the path to the embedded Python
 set PYTHON_DIR=%~dp0pythonembed
 
+REM Ensure the embedded Python is used by setting PATH
+set PATH=%PYTHON_DIR%\Scripts;%PATH%
+
+REM Check if pip is available; if not, install it
+if not exist "%PYTHON_DIR%\Scripts\pip.exe" (
+    echo Installing pip...
+    "%PYTHON_DIR%\python.exe" get-pip.py
+)
+
 REM Check if virtual environment exists
 if not exist venv (
     echo Creating virtual environment...
@@ -12,7 +21,7 @@ REM Activate the virtual environment
 call venv\Scripts\activate
 
 REM Upgrade pip (optional but recommended)
-python -m pip install --upgrade pip
+pip install --upgrade pip
 
 REM Install dependencies
 if exist requirements.txt (
@@ -24,3 +33,5 @@ if exist requirements.txt (
 
 echo Setup complete.
 pause
+
+
