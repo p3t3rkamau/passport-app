@@ -1,4 +1,7 @@
 @echo off
+REM Set the path to the embedded Python
+set PYTHON_DIR=%~dp0pythonembed
+
 REM Activate the virtual environment
 call venv\Scripts\activate
 

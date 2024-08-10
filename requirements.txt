@@ -1,0 +1,6 @@
+Flask
+mtcnn
+opencv-python-headless
+numpy
+Pillow
+tensorflow
