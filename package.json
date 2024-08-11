@@ -1,0 +1,22 @@
+{
+  "name": "image_passport",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "tailwindcss -i ./static/tailwind.css -o ./static/output.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "autoprefixer": "^10.4.20",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.427.0",
+    "postcss": "^8.4.41",
+    "tailwind-merge": "^2.4.0",
+    "tailwindcss": "^3.4.9",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}
