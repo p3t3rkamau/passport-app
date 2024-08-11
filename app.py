@@ -1,10 +1,12 @@
-from flask import Flask, request, render_template, send_from_directory, send_file, make_response, jsonify, redirect
+from flask import Flask, request, render_template, send_from_directory, send_file, make_response, jsonify, redirect,  url_for
 from mtcnn import MTCNN
 import cv2
 import numpy as np
 import os
 from PIL import Image
 import json
+import base64
+import time
 
 
 app = Flask(__name__)
@@ -53,6 +55,7 @@ def upload_image():
         # Detect faces
         detections = detector.detect_faces(img)
         if len(detections) == 0:
+            # Use url_for to generate a URL for the image
             return render_template('manualcrop.html')
 
 
@@ -340,8 +343,28 @@ def delete_all_folders():
 
     return "All files in upload and result folders deleted successfully", 200
 
+@app.route('/save_cropped_image', methods=['POST'])
+def save_cropped_image():
+    image_data = request.json['imageData']
+    filename = f'cropped_image_{int(time.time())}.jpg'
+    image_path = os.path.join(RESULT_FOLDER, filename)
+
+    # Decode and save the image
+    with open(image_path, "wb") as fh:
+        fh.write(base64.b64decode(image_data.split(",")[1]))
+
+    return jsonify({'filename': filename})
 
 
+@app.route('/result/<filename>')
+def show_result(filename):
+    # Check if file exists and return result template
+    return render_template('result.html', filename=filename)
+
+
+@app.route('/result/<filename>')
+def result(filename):
+    return render_template('result.html', filename=filename)
 
 @app.route('/download/<filename>')
 def download_file(filename):

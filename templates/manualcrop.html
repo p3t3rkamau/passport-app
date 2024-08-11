@@ -3,163 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crop Image</title>
+    <title>Image Cropper</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .crop-container {
+        .image-wrapper {
             position: relative;
             overflow: hidden;
-            width: 100%;
-            height: 400px;
+            width: 100%; /* Fixed width */
+            height: 600px; /* Fixed height */
+            border: 2px solid #ccc;
+            margin-top: 1rem;
         }
         .crop-box {
             position: absolute;
-            border: 2px solid #007bff;
+            border: 2px dashed #ccc;
             cursor: move;
-            background: rgba(0, 123, 255, 0.3);
         }
-        .resize-handle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #007bff;
-            cursor: nwse-resize;
+        .custom-inputs {
+            display: none;
         }
-        .resize-handle.nw { top: 0; left: 0; cursor: nwse-resize; }
-        .resize-handle.ne { top: 0; right: 0; cursor: nesw-resize; }
-        .resize-handle.sw { bottom: 0; left: 0; cursor: nesw-resize; }
-        .resize-handle.se { bottom: 0; right: 0; cursor: nwse-resize; }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto p-4">
-        <div class="flex justify-between items-center mb-4">
-            <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Bureau Graphics Logo" class="h-12">
-            <div>
-                <input type="number" id="copiesInput" min="1" max="6" value="1" class="border rounded px-2 py-1 w-16 mr-2">
-                <button id="downloadBtn" class="bg-blue-600 text-white px-4 py-2 rounded mr-2">Download</button>
-                <button id="printBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Print</button>
-            </div>
-        </div>
+<body class="flex flex-col h-screen bg-gray-100">
+    <header class="bg-gray-400 p-2 flex items-center justify-between">
+        <img
+            src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png"
+            alt="Company Logo"
+            class="h-16 ml-4"
+        />
+    </header>
 
-        <div class="bg-white shadow-lg rounded-lg p-6">
-            <div class="flex mb-4">
-                <button class="bg-gray-200 px-4 py-2 rounded mr-2" data-size="normal">Normal</button>
-                <button class="bg-gray-200 px-4 py-2 rounded mr-2" data-size="license">License</button>
-                <button class="bg-gray-200 px-4 py-2 rounded mr-2" data-size="us-visa">US visa</button>
-                <button class="bg-gray-200 px-4 py-2 rounded" data-size="custom">more...</button>
-            </div>
+    <div class="flex flex-grow">
+        <aside class="w-64 min-h-screen bg-gray-800 text-white p-4 space-y-4">
+            <a href="/" class="block py-2 px-4 rounded hover:bg-gray-600">Upload</a>
+            <a href="/settings" class="block py-2 px-4 rounded hover:bg-gray-600">Settings</a>
+        </aside>
 
-            <div class="crop-container mb-4">
-                <img id="imageToEdit" src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Image to crop" class="max-w-full">
-                <div class="crop-box">
-                    <div class="resize-handle nw"></div>
-                    <div class="resize-handle ne"></div>
-                    <div class="resize-handle sw"></div>
-                    <div class="resize-handle se"></div>
+        <main class="flex-grow ml-8 mt-4 p-8">
+            <div class="flex flex-col bg-white shadow-md rounded-lg p-4">
+                <h2 class="text-xl font-semibold mb-4">Workspace</h2>
+                <div class="mb-4">
+                    <input type="file" id="imageUpload" accept="image/*" class="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <select id="crop-size" class="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="" disabled selected>Select size</option>
+                        <option value="license">License</option>
+                        <option value="Us visa">US Visa</option>
+                        <option value="norm">Norm</option>
+                        <option value="test">Test</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <div class="custom-inputs">
+                        <input type="number" id="custom-width" placeholder="Width (inches)" class="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <input type="number" id="custom-height" placeholder="Height (inches)" class="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
                 </div>
-            </div>
 
-            <div class="flex justify-end">
-                <button id="cancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded mr-2">Cancel</button>
-                <button id="okBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Ok</button>
+                <div class="relative image-wrapper">
+                    <img id="image" alt="To be cropped" class="w-full h-full object-contain" style="display: none;">
+                    <div id="crop-box" class="crop-box" style="width: 100px; height: 100px;"></div>
+                </div>
+
+                <div class="flex justify-center mt-4 space-x-4">
+                    <button id="zoom-in" class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button id="zoom-out" class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                </div>
+
+                <button id="cropButton" class="mt-4 py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">Crop</button>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        const cropBox = document.querySelector('.crop-box');
-        const image = document.getElementById('imageToEdit');
-        const resizeHandles = document.querySelectorAll('.resize-handle');
+        const image = document.getElementById('image');
+        const cropBox = document.getElementById('crop-box');
+        const sizeSelect = document.getElementById('crop-size');
+        const customInputs = document.querySelector('.custom-inputs');
         let isDragging = false;
-        let isResizing = false;
-        let startX, startY, startWidth, startHeight, startLeft, startTop;
+        let startX, startY;
+        let scale = 1;
+        let selectedSize = { width: 100, height: 100 }; // Default size in pixels
 
-        function initializeCropBox() {
-            cropBox.style.width = '100px';
-            cropBox.style.height = '100px';
-            cropBox.style.left = '50px';
-            cropBox.style.top = '50px';
+        const sizes = {
+            "license": { width: 0.8, height: 1.0 },
+            "Us visa": { width: 2.0, height: 2.0 },
+            "norm": { width: 1.4, height: 1.8 },
+            "test": { width: 2.0, height: 3.0 }
+        };
+
+        function getPixelsFromInches(inches) {
+            const dpi = 96; // You might want to adjust this if needed
+            return inches * dpi;
         }
 
-        cropBox.addEventListener('mousedown', startDrag);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', stopDrag);
-
-        resizeHandles.forEach(handle => {
-            handle.addEventListener('mousedown', startResize);
+        sizeSelect.addEventListener('change', function () {
+            const value = this.value;
+            if (value === 'custom') {
+                customInputs.classList.remove('hidden');
+            } else {
+                customInputs.classList.add('hidden');
+                if (sizes[value]) {
+                    selectedSize.width = getPixelsFromInches(sizes[value].width);
+                    selectedSize.height = getPixelsFromInches(sizes[value].height);
+                    cropBox.style.width = `${selectedSize.width}px`;
+                    cropBox.style.height = `${selectedSize.height}px`;
+                }
+            }
         });
 
-        function startDrag(e) {
-            if (isResizing) return;
+        document.getElementById('custom-width').addEventListener('input', function () {
+            selectedSize.width = getPixelsFromInches(parseFloat(this.value));
+            cropBox.style.width = `${selectedSize.width}px`;
+        });
+
+        document.getElementById('custom-height').addEventListener('input', function () {
+            selectedSize.height = getPixelsFromInches(parseFloat(this.value));
+            cropBox.style.height = `${selectedSize.height}px`;
+        });
+
+        document.getElementById('imageUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                image.src = e.target.result;
+                image.style.display = 'block';
+                cropBox.style.width = `${selectedSize.width}px`;
+                cropBox.style.height = `${selectedSize.height}px`;
+            };
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+
+        image.onload = function() {
+            cropBox.style.left = '0px';
+            cropBox.style.top = '0px';
+        };
+
+        cropBox.addEventListener('mousedown', function(e) {
             isDragging = true;
             startX = e.clientX - cropBox.offsetLeft;
             startY = e.clientY - cropBox.offsetTop;
-        }
+        });
 
-        function drag(e) {
+        document.addEventListener('mousemove', function(e) {
             if (isDragging) {
-                const imageRect = image.getBoundingClientRect();
-                let newX = e.clientX - startX - imageRect.left;
-                let newY = e.clientY - startY - imageRect.top;
-                newX = Math.max(0, Math.min(newX, imageRect.width - cropBox.offsetWidth));
-                newY = Math.max(0, Math.min(newY, imageRect.height - cropBox.offsetHeight));
-                cropBox.style.left = newX + 'px';
-                cropBox.style.top = newY + 'px';
-            } else if (isResizing) {
-                const imageRect = image.getBoundingClientRect();
-                let newWidth = startWidth + (e.clientX - startX - imageRect.left - startLeft);
-                let newHeight = startHeight + (e.clientY - startY - imageRect.top - startTop);
-                newWidth = Math.max(50, Math.min(newWidth, imageRect.width - cropBox.offsetLeft));
-                newHeight = Math.max(50, Math.min(newHeight, imageRect.height - cropBox.offsetTop));
-                cropBox.style.width = newWidth + 'px';
-                cropBox.style.height = newHeight + 'px';
+                let x = e.clientX - startX;
+                let y = e.clientY - startY;
+
+                x = Math.max(0, Math.min(x, image.offsetWidth - cropBox.offsetWidth));
+                y = Math.max(0, Math.min(y, image.offsetHeight - cropBox.offsetHeight));
+
+                cropBox.style.left = `${x}px`;
+                cropBox.style.top = `${y}px`;
             }
-        }
+        });
 
-        function stopDrag() {
+        document.addEventListener('mouseup', function() {
             isDragging = false;
-        }
+        });
 
-        function startResize(e) {
-            isResizing = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            startWidth = cropBox.offsetWidth;
-            startHeight = cropBox.offsetHeight;
-            startLeft = cropBox.offsetLeft;
-            startTop = cropBox.offsetTop;
-        }
+        document.getElementById('zoom-in').addEventListener('click', function() {
+            scale = Math.min(scale * 1.1, 4); // Zoom in
+            image.style.transform = `scale(${scale})`;
+        });
 
-        document.getElementById('okBtn').addEventListener('click', () => {
-            const cropBoxRect = cropBox.getBoundingClientRect();
-            const imageRect = image.getBoundingClientRect();
-            const crop = {
-                x: (cropBoxRect.left - imageRect.left) / imageRect.width,
-                y: (cropBoxRect.top - imageRect.top) / imageRect.height,
-                width: cropBoxRect.width / imageRect.width,
-                height: cropBoxRect.height / imageRect.height
+        document.getElementById('zoom-out').addEventListener('click', function() {
+            scale = Math.max(scale / 1.1, 0.125); // Zoom out
+            image.style.transform = `scale(${scale})`;
+        });
+
+        document.getElementById('cropButton').addEventListener('click', function() {
+            if (!image.src) {
+                console.error('No image loaded');
+                return;
+            }
+
+            const cropData = {
+                x: cropBox.offsetLeft / (image.offsetWidth * scale),
+                y: cropBox.offsetTop / (image.offsetHeight * scale),
+                width: cropBox.offsetWidth / (image.offsetWidth * scale),
+                height: cropBox.offsetHeight / (image.offsetHeight * scale)
             };
-            console.log('Crop data:', crop);
-            // Here you would send the crop data to the server or process it further
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+
+            ctx.drawImage(image, 0, 0);
+
+            const croppedWidth = cropData.width * image.naturalWidth;
+            const croppedHeight = cropData.height * image.naturalHeight;
+            const croppedX = cropData.x * image.naturalWidth;
+            const croppedY = cropData.y * image.naturalHeight;
+
+            const imageData = ctx.getImageData(croppedX, croppedY, croppedWidth, croppedHeight);
+
+            canvas.width = croppedWidth;
+            canvas.height = croppedHeight;
+
+            ctx.putImageData(imageData, 0, 0);
+
+            sendCroppedImage(canvas.toDataURL('image/jpeg'));
         });
 
-        document.getElementById('cancelBtn').addEventListener('click', () => {
-            initializeCropBox();
-        });
-
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            const copies = document.getElementById('copiesInput').value;
-            console.log('Downloading', copies, 'copies');
-            // Implement download logic here
-        });
-
-        document.getElementById('printBtn').addEventListener('click', () => {
-            const copies = document.getElementById('copiesInput').value;
-            console.log('Printing', copies, 'copies');
-            // Implement print logic here
-        });
-
-        window.addEventListener('load', initializeCropBox);
+        function sendCroppedImage(imageData) {
+            fetch('/save_cropped_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ imageData: imageData }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.filename) {
+                    window.location.href = '/result/' + data.filename;
+                } else {
+                    alert('An error occurred while saving the image.');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the image.');
+            });
+        }
     </script>
 </body>
 </html>
