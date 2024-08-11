@@ -5,3 +5,7 @@ numpy
 Pillow
 tensorflow
 pip
+json
+base64
+time
+os

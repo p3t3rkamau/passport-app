@@ -355,6 +355,10 @@ def save_cropped_image():
 
     return jsonify({'filename': filename})
 
+@app.route('/editor')
+def manual_crop():
+    # Check if file exists and return result template
+    return render_template('manualcrop.html')
 
 @app.route('/result/<filename>')
 def show_result(filename):
