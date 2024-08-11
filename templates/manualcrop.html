@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Image</title>
+    <style>
+        .crop-container {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 400px;
+        }
+        .crop-box {
+            position: absolute;
+            border: 2px solid #007bff;
+            cursor: move;
+            background: rgba(0, 123, 255, 0.3);
+        }
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #007bff;
+            cursor: nwse-resize;
+        }
+        .resize-handle.nw { top: 0; left: 0; cursor: nwse-resize; }
+        .resize-handle.ne { top: 0; right: 0; cursor: nesw-resize; }
+        .resize-handle.sw { bottom: 0; left: 0; cursor: nesw-resize; }
+        .resize-handle.se { bottom: 0; right: 0; cursor: nwse-resize; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <div class="flex justify-between items-center mb-4">
+            <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Bureau Graphics Logo" class="h-12">
+            <div>
+                <input type="number" id="copiesInput" min="1" max="6" value="1" class="border rounded px-2 py-1 w-16 mr-2">
+                <button id="downloadBtn" class="bg-blue-600 text-white px-4 py-2 rounded mr-2">Download</button>
+                <button id="printBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Print</button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <div class="flex mb-4">
+                <button class="bg-gray-200 px-4 py-2 rounded mr-2" data-size="normal">Normal</button>
+                <button class="bg-gray-200 px-4 py-2 rounded mr-2" data-size="license">License</button>
+                <button class="bg-gray-200 px-4 py-2 rounded mr-2" data-size="us-visa">US visa</button>
+                <button class="bg-gray-200 px-4 py-2 rounded" data-size="custom">more...</button>
+            </div>
+
+            <div class="crop-container mb-4">
+                <img id="imageToEdit" src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Image to crop" class="max-w-full">
+                <div class="crop-box">
+                    <div class="resize-handle nw"></div>
+                    <div class="resize-handle ne"></div>
+                    <div class="resize-handle sw"></div>
+                    <div class="resize-handle se"></div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button id="cancelBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded mr-2">Cancel</button>
+                <button id="okBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Ok</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cropBox = document.querySelector('.crop-box');
+        const image = document.getElementById('imageToEdit');
+        const resizeHandles = document.querySelectorAll('.resize-handle');
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY, startWidth, startHeight, startLeft, startTop;
+
+        function initializeCropBox() {
+            cropBox.style.width = '100px';
+            cropBox.style.height = '100px';
+            cropBox.style.left = '50px';
+            cropBox.style.top = '50px';
+        }
+
+        cropBox.addEventListener('mousedown', startDrag);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDrag);
+
+        resizeHandles.forEach(handle => {
+            handle.addEventListener('mousedown', startResize);
+        });
+
+        function startDrag(e) {
+            if (isResizing) return;
+            isDragging = true;
+            startX = e.clientX - cropBox.offsetLeft;
+            startY = e.clientY - cropBox.offsetTop;
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                const imageRect = image.getBoundingClientRect();
+                let newX = e.clientX - startX - imageRect.left;
+                let newY = e.clientY - startY - imageRect.top;
+                newX = Math.max(0, Math.min(newX, imageRect.width - cropBox.offsetWidth));
+                newY = Math.max(0, Math.min(newY, imageRect.height - cropBox.offsetHeight));
+                cropBox.style.left = newX + 'px';
+                cropBox.style.top = newY + 'px';
+            } else if (isResizing) {
+                const imageRect = image.getBoundingClientRect();
+                let newWidth = startWidth + (e.clientX - startX - imageRect.left - startLeft);
+                let newHeight = startHeight + (e.clientY - startY - imageRect.top - startTop);
+                newWidth = Math.max(50, Math.min(newWidth, imageRect.width - cropBox.offsetLeft));
+                newHeight = Math.max(50, Math.min(newHeight, imageRect.height - cropBox.offsetTop));
+                cropBox.style.width = newWidth + 'px';
+                cropBox.style.height = newHeight + 'px';
+            }
+        }
+
+        function stopDrag() {
+            isDragging = false;
+        }
+
+        function startResize(e) {
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = cropBox.offsetWidth;
+            startHeight = cropBox.offsetHeight;
+            startLeft = cropBox.offsetLeft;
+            startTop = cropBox.offsetTop;
+        }
+
+        document.getElementById('okBtn').addEventListener('click', () => {
+            const cropBoxRect = cropBox.getBoundingClientRect();
+            const imageRect = image.getBoundingClientRect();
+            const crop = {
+                x: (cropBoxRect.left - imageRect.left) / imageRect.width,
+                y: (cropBoxRect.top - imageRect.top) / imageRect.height,
+                width: cropBoxRect.width / imageRect.width,
+                height: cropBoxRect.height / imageRect.height
+            };
+            console.log('Crop data:', crop);
+            // Here you would send the crop data to the server or process it further
+        });
+
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            initializeCropBox();
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const copies = document.getElementById('copiesInput').value;
+            console.log('Downloading', copies, 'copies');
+            // Implement download logic here
+        });
+
+        document.getElementById('printBtn').addEventListener('click', () => {
+            const copies = document.getElementById('copiesInput').value;
+            console.log('Printing', copies, 'copies');
+            // Implement print logic here
+        });
+
+        window.addEventListener('load', initializeCropBox);
+    </script>
+</body>
+</html>

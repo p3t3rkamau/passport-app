@@ -53,7 +53,8 @@ def upload_image():
         # Detect faces
         detections = detector.detect_faces(img)
         if len(detections) == 0:
-            return "No face detected", 400
+            return render_template('manualcrop.html')
+
 
         # Get the bounding box for the first detected face
         bounding_box = detections[0]['box']
@@ -164,7 +165,7 @@ def api_crop_image():
     # Detect faces
     detections = detector.detect_faces(img)
     if len(detections) == 0:
-        return jsonify({"error": "No face detected"}), 400
+        return render_template('manualcrop.html', image_path=img_path)
 
     # Get the bounding box for the first detected face
     bounding_box = detections[0]['box']
@@ -308,11 +309,11 @@ def get_sizes():
         sizes = json.load(file)
 
     # Ensure sizes is a dictionary
-    if isinstance(sizes, list):
+    if not isinstance(sizes, dict):
         return jsonify({"error": "Invalid data format"}), 500
 
     # Convert JSON to a format suitable for the frontend
-    formatted_sizes = [{"label": f"{v['width']}x{v['height']} inches", "value": k} for k, v in sizes.items()]
+    formatted_sizes = [{"label": f"{key} ({v['width']}x{v['height']} inches)", "value": key} for key, v in sizes.items()]
 
     return jsonify(formatted_sizes)
 

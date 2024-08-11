@@ -4,47 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Result</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='static.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='output.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-     <div class="navbar">
-        <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Company Logo">
-        <div>
+<body class="bg-gray-100 font-sans text-gray-800">
 
-        </div>
-        <form method="get" onsubmit="setAction(this)">
-            <label for="num-copies">Number of Copies:</label>
-            <select name="num_copies" id="num-copies" required>
-                <option value="4">4 Images on A4</option>
-                <option value="8">8 Images on A4</option>
-            </select>
-            <input type="hidden" name="filename" value="{{ filename }}">
-            <button type="submit">Download Print Image</button>
-        </form>
-    </div>
-
-    <div class="sidebar">
-        <a href="/">Upload</a>
-        <a href="/settings">Settings</a>
-
-    </div>
-
-    <div class="content">
-        <div class="image-preview">
-            <h4>Cropped Image</h4>
-            <img class="croppedImage" src="{{ url_for('download_file', filename=filename) }}" alt="Cropped Image">
+    <div class="flex flex-col h-screen">
+        <!-- Navbar -->
+        <div class="p-2 flex items-center justify-between bg-gray-400 ">
+            <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Company Logo" class="h-16 ml-4">
+            <form method="get" onsubmit="setAction(this)" class="flex items-center space-x-4">
+                <label for="num-copies" class="text-white">Number of Copies:</label>
+                <select name="num_copies" id="num-copies" required class="p-2 border border-blue-400 rounded">
+                    <option value="4">4 Images on A4</option>
+                    <option value="6">6 Images on A4</option>
+                    <option value="8">8 Images on A4</option>
+                </select>
+                <input type="hidden" name="filename" value="{{ filename }}">
+                <button type="submit" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200">Download Print Image</button>
+            </form>
         </div>
 
-        <div class="image-preview">
-            <h4>Printable Image Preview</h4>
-            <img src="{{ url_for('print_image', filename=filename, num_copies=4) }}" alt="Printable Image Preview">
+        <div class="flex flex-1">
+            <!-- Sidebar -->
+            <div class="w-64 bg-gray-800 text-white p-4 space-y-4">
+                <a href="/" class="block py-2 px-4 rounded hover:bg-gray-600">Upload</a>
+                <a href="/settings" class="block py-2 px-4 rounded hover:bg-gray-600">Settings</a>
+            </div>
 
+            <!-- Content -->
+            <div class="flex-1 p-6 flex space-x-6">
+                <!-- Cropped Image -->
+                <div class="flex-none w-1/3 bg-white shadow-lg rounded-lg p-4">
+                    <h4 class="text-xl font-semibold mb-4">Cropped Image</h4>
+                    <img class="w-full h-auto border rounded-lg" src="{{ url_for('download_file', filename=filename) }}" alt="Cropped Image">
+                </div>
+
+                <!-- Printable Image Preview -->
+                <div class="flex-1 bg-white shadow-lg rounded-lg p-4">
+                    <h4 class="text-xl font-semibold mb-4">Printable Image Preview</h4>
+                    <img class="w-full h-auto border rounded-lg" src="{{ url_for('print_image', filename=filename, num_copies=4) }}" alt="Printable Image Preview">
+                </div>
+            </div>
         </div>
-
-
-
-
     </div>
 
     <script>

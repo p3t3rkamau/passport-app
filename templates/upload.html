@@ -4,59 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Image</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='static.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='output.css') }}">
+   
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <style>
+        /* Add your styles for the loaders here */
+        .hidden {
+            display: none;
+        }
+        #image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit:cover;
+            display:flex;
+            align-items:center;
+            justify-content:cee
+            height: auto;
+        }
+        #loading-container {
+            display: none;
+            align-items: center;
+        }
+        .spinner-border {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <div class="bg-gray-100 min-h-screen">
-        <nav class="bg-blue-600 text-white p-4 fixed top-0 left-0 w-full z-50">
-            <div class="container mx-auto flex justify-between items-center">
-                <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Company Logo" class="h-16">
-                <a href="/" class="hover:text-gray-200">Home</a>
-            </div>
-        </nav>
+    <div class="flex flex-col h-screen">
+        <div class="bg-gray-400 p-2 flex items-center justify-between">
+            <img src="https://ik.imagekit.io/6cga8hi9z/Bureau%20Graphics/image-removebg-preview%20(20).png" alt="Company Logo" class="h-16 ml-4">
+            
+        </div>
 
         <div class="flex">
-            <aside class="bg-gray-800 text-white w-64 min-h-screen fixed left-0 top-20 p-5">
-                <a href="/" class="block mb-4 hover:text-gray-300">Upload</a>
-                <a href="/settings" class="block mb-4 hover:text-gray-300">Settings</a>
-            </aside>
+            <div class="w-64 h-screen bg-gray-800 text-white p-4 space-y-4">
+                <a href="/" class="block py-2 px-4 rounded hover:bg-gray-600">Upload</a>
+            
+                <a href="/settings" class="block py-2 px-4 rounded hover:bg-gray-600">Settings</a>
+            </div>
 
-            <main class="flex-grow ml-64 mt-20 p-8">
-                <h1 class="text-2xl font-bold mb-6">Upload Image</h1>
-                <form method="POST" enctype="multipart/form-data" action="/" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                    <div class="mb-4">
-                        <input type="file" name="image" accept="image/*" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    </div>
+            <main class="flex-grow ml-8 mt-30 p-8">
+                <div class="container mx-auto my-10 p-5 bg-white rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-5">Upload Passport Image</h2>
 
-                    <div class="mb-4">
-                        <label for="crop-size" class="block text-gray-700 text-sm font-bold mb-2">Choose a crop size:</label>
-                        <select name="crop_size" id="crop-size" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                            <!-- Options will be populated here by JavaScript -->
-                        </select>
-                    </div>
-
-                    <div id="custom-inputs" class="mb-4 hidden">
-                        <div class="mb-4">
-                            <label for="custom-width" class="block text-gray-700 text-sm font-bold mb-2">Custom Width (inches):</label>
-                            <input type="number" name="custom_width" step="0.1" id="custom-width" placeholder="Enter custom width" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <!-- Form with Drag-and-Drop Area -->
+                    <form method="POST" enctype="multipart/form-data" action="/" class="mt-5 bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                        <!-- Drag and Drop Area -->
+                        <div id="upload-area" class="border-2 border-dashed border-gray-300 p-5 rounded-lg flex justify-center items-center bg-gray-50">
+                            <input type="file" name="image" id="file-input" class="hidden" accept="image/*" required>
+                            <div id="drag-area" class="text-gray-500">
+                                Drag & Drop your files here or <button type="button" id="file-select-btn" class="text-blue-500 underline">browse</button>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label for="custom-height" class="block text-gray-700 text-sm font-bold mb-2">Custom Height (inches):</label>
-                            <input type="number" name="custom_height" step="0.1" id="custom-height" placeholder="Enter custom height" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        </div>
-                    </div>
 
-                    <div class="flex items-center justify-between">
-                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                            Upload and Process
-                        </button>
+                        <!-- Image Preview -->
+                        <div id="image-preview-container" class="mt-4 hidden">
+                            <img id="image-preview" src="" alt="Image Preview">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="crop-size" class="block text-gray-700 text-sm font-bold mb-2">Choose a crop size:</label>
+                            <select name="crop_size" id="crop-size" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <!-- Options will be populated here by JavaScript -->
+                            </select>
+                        </div>
+
+                        <div class="custom-inputs mb-4 hidden">
+                            <div class="mb-4">
+                                <label for="custom-width" class="block text-gray-700 text-sm font-bold mb-2">Custom Width (inches):</label>
+                                <input type="number" name="custom_width" step="0.1" id="custom-width" placeholder="Enter custom width" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            </div>
+                            <div class="mb-4">
+                                <label for="custom-height" class="block text-gray-700 text-sm font-bold mb-2">Custom Height (inches):</label>
+                                <input type="number" name="custom_height" step="0.1" id="custom-height" placeholder="Enter custom height" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <button type="submit" id="upload-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                Upload and Process
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Loading State -->
+                    <div id="loading-container" class="mt-5 flex items-center space-x-3">
+                        <div class="spinner-border"></div>
+                        <div id="loading-text" class="text-gray-500">Uploading and processing...</div>
                     </div>
-                </form>
+                </div>
             </main>
         </div>
     </div>
-    
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -78,21 +127,72 @@
                     select.addEventListener('change', function() {
                         const customInputs = document.querySelector('.custom-inputs');
                         if (this.value === 'custom') {
-                            customInputs.style.display = 'block';
+                            customInputs.classList.remove('hidden');
                         } else {
-                            customInputs.style.display = 'none';
+                            customInputs.classList.add('hidden');
                         }
                     });
 
-                    // Initialize custom inputs visibility
-                    if (select.value === 'custom') {
-                        document.querySelector('.custom-inputs').style.display = 'block';
+                    // Initialize custom inputs visibility based on initial value
+                    const initialValue = select.value;
+                    const customInputs = document.querySelector('.custom-inputs');
+                    if (initialValue === 'custom') {
+                        customInputs.classList.remove('hidden');
                     } else {
-                        document.querySelector('.custom-inputs').style.display = 'none';
+                        customInputs.classList.add('hidden');
                     }
                 })
                 .catch(error => console.error('Error fetching sizes:', error));
         });
+
+        const fileInput = document.getElementById('file-input');
+        const fileSelectBtn = document.getElementById('file-select-btn');
+        const uploadArea = document.getElementById('upload-area');
+        const uploadBtn = document.getElementById('upload-btn');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const loadingContainer = document.getElementById('loading-container');
+        const loadingText = document.getElementById('loading-text');
+
+        // File select button
+        fileSelectBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // Drag and Drop
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('border-blue-500');
+        });
+
+        uploadArea.addEventListener('dragleave', function() {
+            uploadArea.classList.remove('border-blue-500');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('border-blue-500');
+            fileInput.files = e.dataTransfer.files;
+            showImagePreview(fileInput.files[0]);
+        });
+
+        // File Input Change
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                showImagePreview(fileInput.files[0]);
+            }
+        });
+
+        function showImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        
     </script>
 </body>
 </html>

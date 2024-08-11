@@ -191,148 +191,21 @@ button:hover {
 }
 
 
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
- body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-}
 .navbar {
-    display: flex;
-    align-items: center;
-    background-color: #333;
-    padding: 10px;
+    background-color: #201E4B;
     color: white;
-    position:fixed;
-    width:100%;
-
-}
-.navbar img {
-    height: 50px; /* Adjust the height of the logo as needed */
-    margin-right: 20px;
-}
-.navbar div {
-    flex-grow: 1;
-}
-.navbar a {
-    color: white;
-    text-decoration: none;
-    margin-right: 20px;
-}
-.navbar a:hover {
-    text-decoration: underline;
-}
-.navbar form {
-    display: flex;
-    align-items: center;
-}
-.navbar form label {
-    margin-right: 10px;
-}
-.navbar form select {
-    margin-right: 10px;
-}
-.navbar form button {
-    padding: 5px 10px;
-    background-color: #555;
-    border: none;
-    color: white;
-    cursor: pointer;
-}
-.navbar form button:hover {
-    background-color: #777;
 }
 .sidebar {
-    background-color: #343a40;
+    background-color: #E71F2C;
     color: white;
-    width: 200px;
-    position: fixed;
-    top: 100px; /* Adjust based on navbar height */
-    bottom: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-between;
-    padding-right:10px;
 }
 .sidebar a {
     color: white;
-    text-decoration: none;
-    margin-bottom: 10px;
-    font-size: 16px;
 }
-.content {
-    margin-left: 220px; /* Adjust based on sidebar width */
-    margin-top: 70px; /* Adjust based on navbar height */
-    padding: 20px;
-    flex: 1;
-    background-color: #fff;
-    border-radius: 4px;
-    text-align: center;
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
+.sidebar a:hover {
+    background-color: #d91345;
 }
-.image-preview {
-    max-width: 45%;
-    margin: 10px;
-}
-.image-preview img{
-    border: 1px solid #ddd
-}
-img {
-    max-width: 100%;
-    height: auto;
-
-    border-radius: 4px;
-}
-a {
-    display: inline-block;
-    margin: 10px 0;
-    padding: 10px 20px;
-    font-size: 16px;
-    color: #fff;
-    background-color: #007bff;
-    text-decoration: none;
-    border-radius: 4px;
-}
-a:hover {
-    background-color: #0056b3;
-}
-form {
-    margin: 20px 0;
-}
-label, select, button {
-    margin: 10px;
-    font-size: 16px;
-}
-button {
-    padding: 10px 20px;
-    font-size: 16px;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-button:hover {
-    background-color: #0056b3;
-}
-.delete-button {
-    background-color: #dc3545;
-}
-.delete-button:hover {
-    background-color: #c82333;
-}
-.croppedImage{
-    max-width:100px
-    max-height:100px
-    object-fit:cover;
+/* Added class for content image border */
+.content img {
+    border: 1px solid #d1d5db; /* Tailwind's gray-300 */
 }

@@ -10,5 +10,9 @@
     "norm": {
         "width": 1.4,
         "height": 1.8
+    },
+    "test": {
+        "width": 2.0,
+        "height": 3.0
     }
 }
