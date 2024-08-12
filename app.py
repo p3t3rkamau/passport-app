@@ -65,9 +65,9 @@ def upload_image():
 
         # Increase the top margin to avoid cutting off the head
         # Calculate the margin to include some chest area and space above the head
-        chest_extension = int(height * 0.4)  # Increased chest area (was 0.5)
+        chest_extension = int(height * 0.5)  # Increased chest area (was 0.5)
         margin = int(0.4 * width)  # Increased left and right margin (was 0.2)
-        top_margin = int(0.8 * height)  # Increased space above the head (was 0.3)
+        top_margin = int(0.6 * height)  # Increased space above the head (was 0.3)
 
         # Calculate crop coordinates
         crop_x1 = max(x - margin, 0)

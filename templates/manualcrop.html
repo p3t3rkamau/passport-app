@@ -11,7 +11,7 @@
             position: relative;
             overflow: hidden;
             width: 100%; /* Fixed width */
-            height: 600px; /* Fixed height */
+            height: 700px; /* Fixed height */
             border: 2px solid #ccc;
             margin-top: 1rem;
         }
@@ -50,11 +50,11 @@
                     <input type="file" id="imageUpload" accept="image/*" class="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                     <select id="crop-size" class="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="" disabled selected>Select size</option>
-                        <option value="license">License</option>
+
                         <option value="Us visa">US Visa</option>
-                        <option value="norm">Norm</option>
-                        <option value="test">Test</option>
-                        <option value="custom">Custom</option>
+                        <option value="Normal">Normal</option>
+
+
                     </select>
                     <div class="custom-inputs">
                         <input type="number" id="custom-width" placeholder="Width (inches)" class="block w-full mb-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
@@ -62,19 +62,24 @@
                     </div>
                 </div>
 
+
                 <div class="relative image-wrapper">
                     <img id="image" alt="To be cropped" class="w-full h-full object-contain" style="display: none;">
                     <div id="crop-box" class="crop-box" style="width: 100px; height: 100px;"></div>
                 </div>
 
-                <div class="flex justify-center mt-4 space-x-4">
-                    <button id="zoom-in" class="py-2 px-4  bg-blue-900 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i class="fas fa-search-plus"></i>
-                    </button>
-                    <button id="zoom-out" class="py-2 px-4  bg-blue-900 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <i class="fas fa-search-minus"></i>
-                    </button>
-                </div>
+<!--                <div class="flex justify-center mt-4 space-x-4">-->
+<!--                    <button id="zoom-in" class="py-2 px-4  bg-blue-900 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">-->
+<!--                        <i class="fas fa-search-plus"></i>-->
+<!--                    </button>-->
+<!--                    <button id="zoom-out" class="py-2 px-4  bg-blue-900 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">-->
+<!--                        <i class="fas fa-search-minus"></i>-->
+<!--                    </button>-->
+<!--                </div>-->
+
+                <button id="acceptButton">Accept</button>
+
+                <p id="warning" class="hidden text-red-500">Please accept the crop position before cropping.</p>
 
                 <button id="cropButton" class="mt-4 py-2 px-4 bg-blue-900 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">Crop</button>
             </div>
@@ -82,163 +87,222 @@
     </div>
 
     <script>
-        const image = document.getElementById('image');
-        const cropBox = document.getElementById('crop-box');
-        const sizeSelect = document.getElementById('crop-size');
-        const customInputs = document.querySelector('.custom-inputs');
-        let isDragging = false;
-        let startX, startY;
-        let scale = 1;
-        let selectedSize = { width: 100, height: 100 }; // Default size in pixels
+   const image = document.getElementById('image');
+const cropBox = document.getElementById('crop-box');
+const sizeSelect = document.getElementById('crop-size');
+const customInputs = document.querySelector('.custom-inputs');
+let isDragging = false;
+let startX, startY;
+let scale = 1;
+let selectedSize = { width: 100, height: 100 }; // Default size in pixels
 
-        const sizes = {
-            "license": { width: 0.8, height: 1.0 },
-            "Us visa": { width: 2.0, height: 2.0 },
-            "norm": { width: 1.4, height: 1.8 },
-            "test": { width: 2.0, height: 3.0 }
-        };
+const sizes = {
+    "license": { width: 0.8, height: 1.0 },
+    "Us visa": { width: 2.0, height: 2.0 },
+    "Normal": { width: 1.4, height: 1.8 },
+};
 
-        function getPixelsFromInches(inches) {
-            const dpi = 96; // You might want to adjust this if needed
-            return inches * dpi;
-        }
+function getPixelsFromInches(inches) {
+    const dpi = 300; // You might want to adjust this if needed
+    return inches * dpi;
+}
 
-        sizeSelect.addEventListener('change', function () {
-            const value = this.value;
-            if (value === 'custom') {
-                customInputs.classList.remove('hidden');
-            } else {
-                customInputs.classList.add('hidden');
-                if (sizes[value]) {
-                    selectedSize.width = getPixelsFromInches(sizes[value].width);
-                    selectedSize.height = getPixelsFromInches(sizes[value].height);
-                    cropBox.style.width = `${selectedSize.width}px`;
-                    cropBox.style.height = `${selectedSize.height}px`;
-                }
-            }
-        });
-
-        document.getElementById('custom-width').addEventListener('input', function () {
-            selectedSize.width = getPixelsFromInches(parseFloat(this.value));
+sizeSelect.addEventListener('change', function () {
+    const value = this.value;
+    if (value === 'custom') {
+        customInputs.classList.remove('hidden');
+    } else {
+        customInputs.classList.add('hidden');
+        if (sizes[value]) {
+            selectedSize.width = getPixelsFromInches(sizes[value].width);
+            selectedSize.height = getPixelsFromInches(sizes[value].height);
             cropBox.style.width = `${selectedSize.width}px`;
-        });
-
-        document.getElementById('custom-height').addEventListener('input', function () {
-            selectedSize.height = getPixelsFromInches(parseFloat(this.value));
             cropBox.style.height = `${selectedSize.height}px`;
-        });
-
-        document.getElementById('imageUpload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                image.src = e.target.result;
-                image.style.display = 'block';
-                cropBox.style.width = `${selectedSize.width}px`;
-                cropBox.style.height = `${selectedSize.height}px`;
-            };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            }
-        });
-
-        image.onload = function() {
-            cropBox.style.left = '0px';
-            cropBox.style.top = '0px';
-        };
-
-        cropBox.addEventListener('mousedown', function(e) {
-            isDragging = true;
-            startX = e.clientX - cropBox.offsetLeft;
-            startY = e.clientY - cropBox.offsetTop;
-        });
-
-        document.addEventListener('mousemove', function(e) {
-            if (isDragging) {
-                let x = e.clientX - startX;
-                let y = e.clientY - startY;
-
-                x = Math.max(0, Math.min(x, image.offsetWidth - cropBox.offsetWidth));
-                y = Math.max(0, Math.min(y, image.offsetHeight - cropBox.offsetHeight));
-
-                cropBox.style.left = `${x}px`;
-                cropBox.style.top = `${y}px`;
-            }
-        });
-
-        document.addEventListener('mouseup', function() {
-            isDragging = false;
-        });
-
-        document.getElementById('zoom-in').addEventListener('click', function() {
-            scale = Math.min(scale * 1.1, 4); // Zoom in
-            image.style.transform = `scale(${scale})`;
-        });
-
-        document.getElementById('zoom-out').addEventListener('click', function() {
-            scale = Math.max(scale / 1.1, 0.125); // Zoom out
-            image.style.transform = `scale(${scale})`;
-        });
-
-        document.getElementById('cropButton').addEventListener('click', function() {
-            if (!image.src) {
-                console.error('No image loaded');
-                return;
-            }
-
-            const cropData = {
-                x: cropBox.offsetLeft / (image.offsetWidth * scale),
-                y: cropBox.offsetTop / (image.offsetHeight * scale),
-                width: cropBox.offsetWidth / (image.offsetWidth * scale),
-                height: cropBox.offsetHeight / (image.offsetHeight * scale)
-            };
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            canvas.width = image.naturalWidth;
-            canvas.height = image.naturalHeight;
-
-            ctx.drawImage(image, 0, 0);
-
-            const croppedWidth = cropData.width * image.naturalWidth;
-            const croppedHeight = cropData.height * image.naturalHeight;
-            const croppedX = cropData.x * image.naturalWidth;
-            const croppedY = cropData.y * image.naturalHeight;
-
-            const imageData = ctx.getImageData(croppedX, croppedY, croppedWidth, croppedHeight);
-
-            canvas.width = croppedWidth;
-            canvas.height = croppedHeight;
-
-            ctx.putImageData(imageData, 0, 0);
-
-            sendCroppedImage(canvas.toDataURL('image/jpeg'));
-        });
-
-        function sendCroppedImage(imageData) {
-            fetch('/save_cropped_image', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ imageData: imageData }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.filename) {
-                    window.location.href = '/result/' + data.filename;
-                } else {
-                    alert('An error occurred while saving the image.');
-                }
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert('An error occurred while saving the image.');
-            });
         }
+    }
+});
+
+document.getElementById('custom-width').addEventListener('input', function () {
+    selectedSize.width = getPixelsFromInches(parseFloat(this.value));
+    cropBox.style.width = `${selectedSize.width}px`;
+});
+
+document.getElementById('custom-height').addEventListener('input', function () {
+    selectedSize.height = getPixelsFromInches(parseFloat(this.value));
+    cropBox.style.height = `${selectedSize.height}px`;
+});
+
+document.getElementById('imageUpload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        image.src = e.target.result;
+        image.style.display = 'block';
+        cropBox.style.width = `${selectedSize.width}px`;
+        cropBox.style.height = `${selectedSize.height}px`;
+    };
+
+    if (file) {
+        reader.readAsDataURL(file);
+    }
+});
+
+image.onload = function() {
+    cropBox.style.left = '0px';
+    cropBox.style.top = '0px';
+};
+
+cropBox.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    startX = e.clientX - cropBox.offsetLeft;
+    startY = e.clientY - cropBox.offsetTop;
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (isDragging) {
+        let x = e.clientX - startX;
+        let y = e.clientY - startY;
+
+        x = Math.max(0, Math.min(x, image.offsetWidth - cropBox.offsetWidth));
+        y = Math.max(0, Math.min(y, image.offsetHeight - cropBox.offsetHeight));
+
+        cropBox.style.left = `${x}px`;
+        cropBox.style.top = `${y}px`;
+    }
+});
+
+document.addEventListener('mouseup', function() {
+    isDragging = false;
+});
+
+document.getElementById('zoom-in').addEventListener('click', function() {
+    scale = Math.min(scale * 1.1, 4); // Zoom in
+    image.style.transform = `scale(${scale})`;
+});
+
+document.getElementById('zoom-out').addEventListener('click', function() {
+    scale = Math.max(scale / 1.1, 0.125); // Zoom out
+    image.style.transform = `scale(${scale})`;
+});
+
+// JavaScript
+
+let cropData = null;
+
+// Function to save crop data
+function saveCropData() {
+    cropData = {
+        cropX: cropBox.offsetLeft,
+        cropY: cropBox.offsetTop,
+        cropWidth: cropBox.offsetWidth,
+        cropHeight: cropBox.offsetHeight,
+        scale: scale,
+    };
+
+    // Optionally, store in localStorage
+    localStorage.setItem('cropData', JSON.stringify(cropData));
+
+    console.log("Crop data saved:", cropData);
+}
+
+// "Accept" button click event
+document.getElementById('acceptButton').addEventListener('click', function () {
+    saveCropData();
+    document.getElementById('warning').classList.add('hidden'); // Hide the warning if any
+});
+
+// "Crop" button click event
+document.getElementById('cropButton').addEventListener('click', function () {
+    if (!cropData) {
+        document.getElementById('warning').classList.remove('hidden'); // Show warning
+        console.error('Please accept the crop position before cropping.');
+        return;
+    }
+
+    const { cropX, cropY, cropWidth, cropHeight, scale } = cropData;
+
+    // Adjust crop calculations for the scale
+    const adjustedCropX = (cropX / (image.offsetWidth * scale)) * image.naturalWidth;
+    const adjustedCropY = (cropY / (image.offsetHeight * scale)) * image.naturalHeight;
+    const adjustedCropWidth = (cropWidth / (image.offsetWidth * scale)) * image.naturalWidth;
+    const adjustedCropHeight = (cropHeight / (image.offsetHeight * scale)) * image.naturalHeight;
+
+    // Ensure the crop dimensions are within the image bounds
+    const croppedWidth = Math.min(adjustedCropWidth, image.naturalWidth - adjustedCropX);
+    const croppedHeight = Math.min(adjustedCropHeight, image.naturalHeight - adjustedCropY);
+
+    // Debugging logs
+    console.log("Adjusted CropX:", adjustedCropX, "Adjusted CropY:", adjustedCropY);
+    console.log("CroppedWidth:", croppedWidth, "CroppedHeight:", croppedHeight);
+
+    // Check if the crop dimensions are valid
+    if (adjustedCropX < 0 || adjustedCropY < 0 || croppedWidth <= 0 || croppedHeight <= 0) {
+        console.error('Invalid crop dimensions:', { adjustedCropX, adjustedCropY, croppedWidth, croppedHeight });
+        alert('Cropping failed due to invalid dimensions.');
+        return;
+    }
+
+    // Create a canvas element to draw the cropped area
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set the canvas to the size of the cropped area
+    canvas.width = croppedWidth;
+    canvas.height = croppedHeight;
+
+    // Draw the cropped image area onto the canvas
+    ctx.drawImage(
+        image,
+        adjustedCropX, adjustedCropY, croppedWidth, croppedHeight, // Source rectangle
+        0, 0, canvas.width, canvas.height // Destination rectangle
+    );
+
+    // Resize the canvas to the specified size (e.g., 300x400 pixels)
+    const resizedCanvas = document.createElement('canvas');
+    resizedCanvas.width = selectedSize.width;
+    resizedCanvas.height = selectedSize.height;
+    const resizedCtx = resizedCanvas.getContext('2d');
+
+    // Draw the cropped image onto the resized canvas
+    resizedCtx.drawImage(
+        canvas,
+        0, 0, croppedWidth, croppedHeight, // Source rectangle on original canvas
+        0, 0, resizedCanvas.width, resizedCanvas.height // Destination rectangle on resized canvas
+    );
+
+    // Convert the resized area to a data URL (base64 string)
+    const resizedImageData = resizedCanvas.toDataURL('image/jpeg');
+
+    // Send or display the resized and cropped image
+    sendCroppedImage(resizedImageData);
+});
+
+
+function sendCroppedImage(imageData) {
+    fetch('/save_cropped_image', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageData: imageData }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.filename) {
+            window.location.href = '/result/' + data.filename;
+        } else {
+            alert('An error occurred while saving the image.');
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the image.');
+    });
+}
+
+
+
     </script>
 </body>
 </html>
