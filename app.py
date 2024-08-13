@@ -7,6 +7,8 @@ from PIL import Image
 import json
 import base64
 import time
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
 
 
 app = Flask(__name__)
@@ -55,33 +57,40 @@ def upload_image():
         # Detect faces
         detections = detector.detect_faces(img)
         if len(detections) == 0:
-            # Use url_for to generate a URL for the image
             return render_template('manualcrop.html')
-
 
         # Get the bounding box for the first detected face
         bounding_box = detections[0]['box']
         x, y, width, height = bounding_box
 
-        # Increase the top margin to avoid cutting off the head
-        # Calculate the margin to include some chest area and space above the head
-        chest_extension = int(height * 0.5)  # Increased chest area (was 0.5)
-        margin = int(0.4 * width)  # Increased left and right margin (was 0.2)
-        top_margin = int(0.6 * height)  # Increased space above the head (was 0.3)
+        # Hardcode specific cropping parameters for each image size
+        crop_size = request.form['crop_size']
+        if crop_size == "license":
+            chest_extension = int(height * 0.8)
+            margin = int(0.25 * width)
+            top_margin = int(0.8 * height)
+        elif crop_size == "Us visa":
+            chest_extension = int(height * 0.5)
+            margin = int(0.3 * width)
+            top_margin = int(0.5 * height)
+        elif crop_size == "Normal":
+            chest_extension = int(height * 0.7)
+            margin = int(0.35 * width)
+            top_margin = int(0.6 * height)
+        else:
+            return "Invalid crop size selected", 400
 
         # Calculate crop coordinates
         crop_x1 = max(x - margin, 0)
-        crop_y1 = max(y - top_margin, 0)  # Move the top boundary up
+        crop_y1 = max(y - top_margin, 0)
         crop_x2 = min(x + width + margin, img.shape[1])
         crop_y2 = min(y + height + chest_extension, img.shape[0])
 
         # Crop the image
         cropped_img = img[crop_y1:crop_y2, crop_x1:crop_x2]
 
-        # Get the selected crop size
-        crop_size = request.form['crop_size']
+        # Get the final dimensions based on the selected crop size
         sizes = load_sizes()
-
         if crop_size in sizes:
             size = sizes[crop_size]
             final_width = get_pixels_from_inches(size['width'])
@@ -103,6 +112,8 @@ def upload_image():
         return render_template('result.html', filename=f"resized_{image.filename}")
 
     return render_template('upload.html')
+
+
 
 @app.route('/print/<filename>/<int:num_copies>')
 def print_image(filename, num_copies):
