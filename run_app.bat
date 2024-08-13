@@ -9,21 +9,20 @@ start .\venv\Scripts\python.exe app.py
 REM Wait for Flask to start (adjust the delay if necessary)
 timeout /t 5 >nul
 
-REM Expose port 5000 using ngrok and redirect the output to a file
-start /B C:\Users\Peter\PycharmProjects\Image_Passport\ngrok\ngrok.exe http 5000 > ngrok_output.txt
+REM Start ngrok and expose port 5000
+start /B C:\Users\Peter\PycharmProjects\Image_Passport\ngrok\ngrok.exe http 5000
 
-REM Wait longer to ensure ngrok has started and the link is available
-timeout /t 20 >nul
+REM Wait longer to ensure ngrok has started
+timeout /t 10 >nul
 
-REM Debug: Check if ngrok_output.txt has content
-type ngrok_output.txt
+REM Fetch the ngrok URL using PowerShell
+for /f "tokens=*" %%A in ('powershell -Command "(Invoke-RestMethod -Uri http://localhost:4040/api/tunnels).tunnels[0].public_url"') do set "NGROK_URL=%%A"
 
-REM Extract the ngrok link and copy it to the clipboard
-for /f "tokens=2 delims= " %%A in ('findstr "http" ngrok_output.txt') do set NGROK_URL=%%A
+REM Echo the ngrok URL
+echo Ngrok URL: %NGROK_URL%
+
+REM Copy the URL to the clipboard
 echo %NGROK_URL% | clip
-
-REM Cleanup: Optionally delete the ngrok_output.txt file
-del ngrok_output.txt
 
 REM Keep the window open
 pause
