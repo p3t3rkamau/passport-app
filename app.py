@@ -8,7 +8,8 @@ import json
 import base64
 import time
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
+from fpdf import FPDF
+from docx import Document
 
 
 app = Flask(__name__)
@@ -109,7 +110,10 @@ def upload_image():
         resized_img_path = os.path.join(RESULT_FOLDER, f"resized_{image.filename}")
         cv2.imwrite(resized_img_path, resized_img)
 
-        return render_template('result.html', filename=f"resized_{image.filename}")
+        # Fetch num_copies from form or use a default value
+        num_copies = int(request.form.get('num_copies', 4))  # Default to 4 copies
+
+        return render_template('result.html', filename=f"resized_{image.filename}", num_copies=num_copies)
 
     return render_template('upload.html')
 
@@ -388,6 +392,42 @@ def download_file(filename):
         return "File not found", 404
     return send_from_directory(RESULT_FOLDER, filename)
 
+
+@app.route('/download_docx/<filename>/<int:num_copies>')
+def download_docx(filename, num_copies):
+    # Generate the printable image first
+    final_image_path = f"printable_{filename}"
+    print_image(filename, num_copies)  # Ensure the printable image is created
+
+    # Create a DOCX file using the generated printable image
+    doc = Document()
+    doc.add_heading('Cropped Image', 0)
+    doc.add_picture(os.path.join(RESULT_FOLDER, final_image_path))
+
+    # Save the DOCX file
+    docx_path = os.path.join(RESULT_FOLDER, f"{os.path.splitext(final_image_path)[0]}.docx")
+    doc.save(docx_path)
+
+    return send_from_directory(RESULT_FOLDER, os.path.basename(docx_path))
+
+@app.route('/download_pdf/<filename>/<int:num_copies>')
+def download_pdf(filename, num_copies):
+    # Generate the printable image first
+    final_image_path = f"printable_{filename}"
+    print_image(filename, num_copies)  # Ensure the printable image is created
+
+    # Create a PDF file using the generated printable image
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Cropped Image", ln=True, align="C")
+    pdf.image(os.path.join(RESULT_FOLDER, final_image_path), x=10, y=30, w=100)
+
+    # Save the PDF file
+    pdf_path = os.path.join(RESULT_FOLDER, f"{os.path.splitext(final_image_path)[0]}.pdf")
+    pdf.output(pdf_path)
+
+    return send_from_directory(RESULT_FOLDER, os.path.basename(pdf_path))
 
 if __name__ == '__main__':
     app.run(debug=True)

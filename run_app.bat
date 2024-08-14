@@ -10,7 +10,7 @@ REM Wait for Flask to start (adjust the delay if necessary)
 timeout /t 5 >nul
 
 REM Start ngrok and expose port 5000
-start /B C:\Users\Peter\PycharmProjects\Image_Passport\ngrok\ngrok.exe http 5000
+start /B C:\Users\HP\Documents\GitHub\passport-app\ngrok\ngrok.exe http 5000
 
 REM Wait longer to ensure ngrok has started
 timeout /t 10 >nul
